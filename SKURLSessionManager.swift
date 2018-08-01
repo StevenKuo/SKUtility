@@ -8,7 +8,7 @@
 
 import Foundation
 
-typealias SKURLSessionManagerCallback = (_: [String:Any]?, _: Error?) -> Void
+typealias SKURLSessionManagerCallback = (_: Any?, _: Error?) -> Void
 
 class SKURLSessionManager: NSObject,URLSessionDelegate {
     static let sharedManager = SKURLSessionManager()
@@ -26,22 +26,16 @@ class SKURLSessionManager: NSObject,URLSessionDelegate {
     private func createTask(urlRequest: URLRequest, callback: SKURLSessionManagerCallback?) {
         let task = mainSession.dataTask(with: urlRequest) { (data, response, e) in
             if e != nil {
-                DispatchQueue.main.async {
-                    callback?(nil, e)
-                }
+                callback?(nil, e)
                 return
             }
             if let data = data {
-                DispatchQueue.main.async {
-                    do {
-                        if let json = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [String:Any] {
-                            callback?(json, nil)
-                        }
-                    } catch {
-                        callback?(nil, error)
-                    }
+                do {
+                    let json = try JSONSerialization.jsonObject(with: data, options: .allowFragments)
+                    callback?(json, nil)
+                } catch {
+                    callback?(nil, error)
                 }
-                
             }
         }
         task.resume()
